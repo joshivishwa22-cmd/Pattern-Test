@@ -1,0 +1,601 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-sans);}
+.quiz-wrap{padding:1.5rem 0 2.5rem;max-width:640px;}
+.screen{display:none;}
+.screen.active{display:block;}
+.prog-bar{height:3px;background:var(--color-background-secondary);border-radius:2px;margin-bottom:2rem;}
+.prog-fill{height:100%;border-radius:2px;background:#534AB7;transition:width .4s ease;}
+.eyebrow{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:#534AB7;margin-bottom:.5rem;}
+.q-area{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.25rem;}
+.q-num{font-size:12px;color:var(--color-text-tertiary);margin-bottom:.75rem;}
+.q-text{font-size:18px;font-weight:500;line-height:1.35;color:var(--color-text-primary);margin-bottom:.35rem;}
+.q-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.55;margin-bottom:1.25rem;}
+.options{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem;}
+.opt{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:.75rem 1rem;cursor:pointer;display:flex;align-items:flex-start;gap:10px;transition:border-color .15s,background .15s;}
+.opt:hover{border-color:var(--color-border-secondary);background:var(--color-background-secondary);}
+.opt.selected{border:1.5px solid #534AB7;background:#EEEDFE;}
+@media(prefers-color-scheme:dark){.opt.selected{background:#26215C;border-color:#7F77DD;}}
+.opt-letter{width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-secondary);flex-shrink:0;margin-top:1px;}
+.opt.selected .opt-letter{background:#534AB7;color:#EEEDFE;}
+@media(prefers-color-scheme:dark){.opt.selected .opt-letter{background:#7F77DD;color:#26215C;}}
+.opt-text{font-size:13px;color:var(--color-text-primary);line-height:1.5;}
+.opt-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4;}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;}
+.btn-back{background:transparent;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:.5rem .9rem;font-size:13px;color:var(--color-text-secondary);cursor:pointer;}
+.btn-back:hover{background:var(--color-background-secondary);}
+.btn-next{background:#534AB7;color:#EEEDFE;border:none;border-radius:var(--border-radius-md);padding:.55rem 1.2rem;font-size:13px;font-weight:500;cursor:pointer;}
+.btn-next:hover{background:#3C3489;}
+.btn-next:disabled{background:var(--color-background-secondary);color:var(--color-text-tertiary);cursor:not-allowed;}
+@media(prefers-color-scheme:dark){.btn-next{background:#7F77DD;color:#26215C;}.btn-next:hover{background:#AFA9EC;}}
+.area-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:1.5rem;}
+.area-btn{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:.85rem .9rem;cursor:pointer;text-align:left;}
+.area-btn:hover{border-color:var(--color-border-secondary);background:var(--color-background-secondary);}
+.area-btn.sel{border:1.5px solid #534AB7;background:#EEEDFE;}
+@media(prefers-color-scheme:dark){.area-btn.sel{background:#26215C;border-color:#7F77DD;}}
+.area-icon{font-size:18px;margin-bottom:.3rem;}
+.area-name{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.area-desc{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4;}
+.result-wrap{padding:0;}
+.pattern-hero{background:#EEEDFE;border-radius:var(--border-radius-lg);padding:1.5rem;margin-bottom:1.25rem;}
+@media(prefers-color-scheme:dark){.pattern-hero{background:#26215C;}}
+.ph-label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#534AB7;margin-bottom:.4rem;}
+@media(prefers-color-scheme:dark){.ph-label{color:#AFA9EC;}}
+.ph-name{font-size:22px;font-weight:500;color:#26215C;margin-bottom:.4rem;}
+@media(prefers-color-scheme:dark){.ph-name{color:#CECBF6;}}
+.ph-desc{font-size:14px;color:#3C3489;line-height:1.6;}
+@media(prefers-color-scheme:dark){.ph-desc{color:#AFA9EC;}}
+.section-title{font-size:12px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-tertiary);margin:1.25rem 0 .6rem;}
+.insight-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:.9rem 1rem;margin-bottom:8px;}
+.ic-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:.4rem;}
+.ic-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ic-title{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.ic-body{font-size:12px;color:var(--color-text-secondary);line-height:1.6;margin-left:18px;}
+.score-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.score-lbl{font-size:12px;color:var(--color-text-secondary);width:110px;flex-shrink:0;text-align:right;}
+.score-track{flex:1;height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;}
+.score-bar{height:100%;border-radius:3px;transition:width .6s ease;}
+.score-val{font-size:12px;font-weight:500;color:var(--color-text-primary);width:32px;text-align:right;}
+.shift-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem .9rem;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start;}
+.shift-num{font-size:11px;font-weight:500;color:#534AB7;min-width:18px;padding-top:1px;}
+@media(prefers-color-scheme:dark){.shift-num{color:#AFA9EC;}}
+.shift-text{font-size:13px;color:var(--color-text-secondary);line-height:1.5;}
+.shift-text strong{font-weight:500;color:var(--color-text-primary);}
+.cta-block{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.25rem;text-align:center;margin-top:1.5rem;}
+.cta-btn{background:#534AB7;color:#EEEDFE;border:none;border-radius:var(--border-radius-md);padding:.6rem 1.25rem;font-size:13px;font-weight:500;cursor:pointer;margin:4px;}
+.cta-btn:hover{background:#3C3489;}
+.cta-ghost{background:transparent;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:.6rem 1.25rem;font-size:13px;color:var(--color-text-secondary);cursor:pointer;margin:4px;}
+.cta-ghost:hover{background:var(--color-background-secondary);}
+@media(prefers-color-scheme:dark){.cta-btn{background:#7F77DD;color:#26215C;}.cta-btn:hover{background:#AFA9EC;}}
+.intro-title{font-size:22px;font-weight:500;line-height:1.3;color:var(--color-text-primary);margin-bottom:.5rem;}
+.intro-sub{font-size:14px;color:var(--color-text-secondary);line-height:1.65;margin-bottom:1.5rem;}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.25rem;}
+.tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:var(--border-radius-md);}
+.tg-p{background:#EEEDFE;color:#3C3489;}
+.tg-t{background:#E1F5EE;color:#085041;}
+.tg-c{background:#FAECE7;color:#712B13;}
+.tg-a{background:#FAEEDA;color:#633806;}
+@media(prefers-color-scheme:dark){.tg-p{background:#26215C;color:#CECBF6;}.tg-t{background:#04342C;color:#9FE1CB;}.tg-c{background:#4A1B0C;color:#F5C4B3;}.tg-a{background:#412402;color:#FAC775;}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
+</style>
+
+<h2 class="sr-only">Life pattern quiz — discover your recurring patterns across any area of life through a personalised multi-area assessment.</h2>
+
+<div class="quiz-wrap">
+
+<div id="s-intro" class="screen active">
+ <div class="eyebrow">Pattern discovery quiz</div>
+ <div class="intro-title">What patterns are running your life?</div>
+ <div class="intro-sub">This quiz maps your hidden patterns across any area of life — relationships, work, money, identity, family dynamics, and more. It doesn't just name the pattern. It shows you exactly where it lives, why it keeps repeating, and what it's costing you.</div>
+ <div class="tag-row">
+  <span class="tag tg-p">8 life areas</span>
+  <span class="tag tg-t">32 pattern questions</span>
+  <span class="tag tg-c">Personalised to your choices</span>
+  <span class="tag tg-a">~7 minutes</span>
+ </div>
+ <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:.5rem;">First — choose which areas you want to map:</div>
+ <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:.9rem;">Select all that apply. The quiz adapts to your selection.</div>
+ <div class="area-grid" id="area-grid">
+  <button class="area-btn" data-area="relationships" onclick="toggleArea(this)">
+   <div class="area-name">Relationships</div>
+   <div class="area-desc">Marriage, partnership, love patterns</div>
+  </button>
+  <button class="area-btn" data-area="family" onclick="toggleArea(this)">
+   <div class="area-name">Family dynamics</div>
+   <div class="area-desc">In-laws, parents, roles you inherited</div>
+  </button>
+  <button class="area-btn" data-area="identity" onclick="toggleArea(this)">
+   <div class="area-name">Identity &amp; self</div>
+   <div class="area-desc">Who you are vs. who you've become</div>
+  </button>
+  <button class="area-btn" data-area="work" onclick="toggleArea(this)">
+   <div class="area-name">Work &amp; career</div>
+   <div class="area-desc">Ambition, authority, recognition</div>
+  </button>
+  <button class="area-btn" data-area="money" onclick="toggleArea(this)">
+   <div class="area-name">Money &amp; power</div>
+   <div class="area-desc">Earning, control, worth</div>
+  </button>
+  <button class="area-btn" data-area="conflict" onclick="toggleArea(this)">
+   <div class="area-name">Conflict</div>
+   <div class="area-desc">How you fight, flee, or freeze</div>
+  </button>
+  <button class="area-btn" data-area="emotion" onclick="toggleArea(this)">
+   <div class="area-name">Emotions</div>
+   <div class="area-desc">Suppression, expression, regulation</div>
+  </button>
+  <button class="area-btn" data-area="purpose" onclick="toggleArea(this)">
+   <div class="area-name">Purpose &amp; growth</div>
+   <div class="area-desc">Meaning, direction, stuck points</div>
+  </button>
+ </div>
+ <div class="nav-row">
+  <span style="font-size:12px;color:var(--color-text-tertiary)" id="sel-count">Select at least 2 areas</span>
+  <button class="btn-next" id="btn-start" disabled onclick="startQuiz()">Begin quiz</button>
+ </div>
+</div>
+
+<div id="s-quiz" class="screen">
+ <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+ <div class="q-area" id="q-area-lbl" style="color:#534AB7;"></div>
+ <div class="q-num" id="q-num-lbl"></div>
+ <div class="q-text" id="q-text"></div>
+ <div class="q-sub" id="q-sub"></div>
+ <div class="options" id="options-list"></div>
+ <div class="nav-row">
+  <button class="btn-back" onclick="prevQ()">Back</button>
+  <button class="btn-next" id="btn-next-q" disabled onclick="nextQ()">Next</button>
+ </div>
+</div>
+
+<div id="s-result" class="screen result-wrap">
+</div>
+
+</div>
+
+<script>
+const AREA_META = {
+ relationships:{label:"Relationships",color:"#534AB7",light:"#EEEDFE",dark:"#26215C"},
+ family:{label:"Family dynamics",color:"#D85A30",light:"#FAECE7",dark:"#4A1B0C"},
+ identity:{label:"Identity & self",color:"#D4537E",light:"#FBEAF0",dark:"#4B1528"},
+ work:{label:"Work & career",color:"#1D9E75",light:"#E1F5EE",dark:"#04342C"},
+ money:{label:"Money & power",color:"#BA7517",light:"#FAEEDA",dark:"#412402"},
+ conflict:{label:"Conflict",color:"#E24B4A",light:"#FCEBEB",dark:"#501313"},
+ emotion:{label:"Emotions",color:"#378ADD",light:"#E6F1FB",dark:"#042C53"},
+ purpose:{label:"Purpose & growth",color:"#639922",light:"#EAF3DE",dark:"#173404"}
+};
+
+const ALL_QS = {
+ relationships:[
+  {q:"When you feel emotionally distant from your partner, what do you usually do?",sub:"Think about your most recent moment of disconnection.",opts:[
+   {l:"Wait for them to notice and come to you",pattern:"Passive withdrawal",score:{avoidance:2,hope:1}},
+   {l:"Bring it up directly — sometimes it escalates into an argument",pattern:"Pursue-escalate",score:{pursue:2,conflict:1}},
+   {l:"Withdraw quietly and manage it on your own",pattern:"Self-silencing",score:{avoidance:3,suppress:1}},
+   {l:"Find indirect ways to signal something is wrong",pattern:"Indirect signalling",score:{indirect:2,hope:1}}
+  ]},
+  {q:"In your relationship, who tends to carry the emotional labour?",sub:"Emotional labour = tracking the emotional state of the relationship, initiating repair, managing tension.",opts:[
+   {l:"Almost always me — I notice everything first",pattern:"Over-functioning",score:{overfunction:3}},
+   {l:"Mostly me, but I resent it sometimes",pattern:"Resentful over-functioning",score:{overfunction:2,resentment:2}},
+   {l:"It feels roughly equal",pattern:"Balanced",score:{balanced:3}},
+   {l:"My partner carries more of it",pattern:"Under-functioning",score:{underfunction:2}}
+  ]},
+  {q:"How do you know when your relationship is in trouble?",sub:"Your internal early warning system.",opts:[
+   {l:"I feel it immediately — like a shift in atmosphere",pattern:"High attunement",score:{attune:3}},
+   {l:"When the same argument surfaces again",pattern:"Pattern recogniser",score:{pattern:2}},
+   {l:"When I start fantasising about being alone or starting over",pattern:"Escape fantasy",score:{escape:3}},
+   {l:"When I realise we haven't really talked in weeks",pattern:"Slow drift recognition",score:{drift:2}}
+  ]},
+  {q:"When your partner disappoints you, what happens next?",sub:"Disappointment = they didn't show up the way you needed.",opts:[
+   {l:"I tell them exactly how I feel, even if it gets heated",pattern:"Direct confronter",score:{direct:2,conflict:1}},
+   {l:"I store it. I don't bring it up unless it happens again",pattern:"Accumulator",score:{accumulate:3}},
+   {l:"I tell myself it doesn't matter and move on",pattern:"Minimiser",score:{minimise:2,suppress:1}},
+   {l:"I pull away emotionally for a while",pattern:"Emotional punisher",score:{withdraw:2,punish:1}}
+  ]}
+ ],
+ family:[
+  {q:"How much does your family of origin shape your current relationships?",sub:"Family of origin = the family you grew up in, their dynamics, rules, and roles.",opts:[
+   {l:"Massively — I can see my parents' patterns in myself",pattern:"High inheritance",score:{inherit:3}},
+   {l:"Somewhat — I've done work on it but it still surfaces",pattern:"Partial awareness",score:{inherit:2,aware:1}},
+   {l:"I've actively broken those patterns",pattern:"Conscious breaker",score:{break:3}},
+   {l:"I'm not sure — I haven't examined it closely",pattern:"Unexamined inheritance",score:{inherit:2,unaware:2}}
+  ]},
+  {q:"When a third party (in-law, parent, friend) influences your relationship, how do you respond?",sub:"This includes advice, judgment, interference, or emotional triangulation.",opts:[
+   {l:"I feel protective of my relationship and push back",pattern:"Boundary holder",score:{boundary:3}},
+   {l:"I absorb it silently and it affects me more than I admit",pattern:"Silent absorber",score:{absorb:3}},
+   {l:"I vent to my partner and we deal with it together",pattern:"Alliance builder",score:{alliance:2}},
+   {l:"I find myself caught between them — unable to choose sides",pattern:"Triangulated",score:{triangle:3}}
+  ]},
+  {q:"What role did you play in your family growing up?",sub:"Not necessarily a formal role — more the emotional function you served.",opts:[
+   {l:"The peacemaker — I made sure everyone was okay",pattern:"Caretaker",score:{caretake:3,overfunction:1}},
+   {l:"The achiever — my success reflected well on the family",pattern:"Performer",score:{perform:3}},
+   {l:"The invisible one — I learned to take up less space",pattern:"Disappearing",score:{invisible:3}},
+   {l:"The rebel — I pushed against expectations",pattern:"Resistor",score:{resist:2}}
+  ]},
+  {q:"How do you feel when your partner prioritises their family of origin over you?",sub:"eg. takes their parent's side, changes plans for family, shares private matters with relatives.",opts:[
+   {l:"Deeply hurt and unseen",pattern:"Attachment wound",score:{attach:3}},
+   {l:"Frustrated but I don't say it directly",pattern:"Suppressed resentment",score:{suppress:2,resentment:2}},
+   {l:"I understand it but wish we had better boundaries",pattern:"Aware but stuck",score:{aware:2,boundary:1}},
+   {l:"I've accepted it as part of who they are",pattern:"Resigned",score:{resign:2}}
+  ]}
+ ],
+ identity:[
+  {q:"When you think about who you were before this relationship or role, what do you feel?",sub:"Who were you before you became a partner, parent, employee, caretaker?",opts:[
+   {l:"Grief — I don't really recognise that version of myself anymore",pattern:"Identity loss",score:{loss:3}},
+   {l:"Nostalgia — I miss her but I can still access her",pattern:"Partial retention",score:{loss:1,access:2}},
+   {l:"Relief — I've grown beyond who I was",pattern:"Identity expansion",score:{expand:3}},
+   {l:"Confusion — I'm not sure I ever had a clear sense of myself",pattern:"Foundational uncertainty",score:{unclear:3}}
+  ]},
+  {q:"How often do you do things that are purely for you — not for anyone else's benefit?",sub:"Not self-care rituals. Actually doing what YOU want, without justifying it.",opts:[
+   {l:"Rarely — I feel guilty or selfish when I prioritise myself",pattern:"Self-erasure",score:{erase:3}},
+   {l:"Sometimes — but I often cut it short",pattern:"Interrupted selfhood",score:{erase:2,guilt:1}},
+   {l:"Fairly regularly — I protect this",pattern:"Healthy boundary",score:{boundary:2}},
+   {l:"I've honestly forgotten what I want for myself",pattern:"Disconnected",score:{disconnect:3}}
+  ]},
+  {q:"When someone asks 'what do YOU want?' — how do you respond?",sub:"Notice your internal reaction, not just your verbal answer.",opts:[
+   {l:"I give an answer but I'm not fully sure it's true",pattern:"Performed certainty",score:{perform:2,disconnect:1}},
+   {l:"I feel a small panic — I don't know",pattern:"Identity freeze",score:{freeze:3}},
+   {l:"I deflect — 'whatever works for everyone'",pattern:"Self-erasure deflection",score:{erase:3}},
+   {l:"I know what I want but I struggle to ask for it",pattern:"Silenced desire",score:{silence:3}}
+  ]},
+  {q:"How do the most important people in your life see you — vs. how you see yourself?",sub:"The gap between your public identity and your private experience.",opts:[
+   {l:"They see someone capable and together — I feel like I'm barely holding on",pattern:"High-functioning facade",score:{facade:3}},
+   {l:"They see someone quiet — I feel invisible even to myself",pattern:"Double invisibility",score:{invisible:3}},
+   {l:"They see me fairly accurately",pattern:"Authentic expression",score:{authentic:3}},
+   {l:"I'm not sure how they see me — I've never felt fully known",pattern:"Unknown self",score:{unknown:3}}
+  ]}
+ ],
+ work:[
+  {q:"How do you relate to authority figures at work?",sub:"Bosses, senior leaders, anyone with power over your outcomes.",opts:[
+   {l:"I over-perform for approval and feel crushed by criticism",pattern:"Approval seeking",score:{approval:3}},
+   {l:"I distrust them by default until they earn it",pattern:"Authority resistance",score:{resist:2}},
+   {l:"I relate to them as peers — power doesn't intimidate me",pattern:"Peer-level confidence",score:{confident:3}},
+   {l:"I shrink — I say yes when I mean no",score:{l:"I shrink — I say yes when I mean no",pattern:"Power collapse",score:{shrink:3}}}
+  ]},
+  {q:"What pattern shows up when you're most stressed at work?",sub:"Not what you do — what happens to you.",opts:[
+   {l:"I overwork to regain a sense of control",pattern:"Control via overwork",score:{overwork:3}},
+   {l:"I go quiet and pull back from the team",pattern:"Stress withdrawal",score:{withdraw:2}},
+   {l:"I catastrophise — assume the worst outcome",pattern:"Catastrophising",score:{catastrophe:3}},
+   {l:"I get irritable and project it onto others",pattern:"Stress displacement",score:{displace:2}}
+  ]},
+  {q:"When you achieve something significant, how do you experience it?",sub:"A promotion, a win, a moment of recognition.",opts:[
+   {l:"I feel it briefly then immediately move to 'what's next'",pattern:"Achievement bypass",score:{bypass:3}},
+   {l:"I downplay it — I don't want to seem arrogant",pattern:"Shrinking success",score:{shrink:2,perform:1}},
+   {l:"I feel proud and let myself enjoy it",pattern:"Healthy receipt",score:{healthy:3}},
+   {l:"I feel like a fraud — I worry it will be taken away",pattern:"Impostor pattern",score:{impostor:3}}
+  ]},
+  {q:"How do you handle being the most competent person in a room?",sub:"Including rooms where others have more status or seniority.",opts:[
+   {l:"I feel it but I don't show it — I defer anyway",pattern:"Competence hiding",score:{hide:3}},
+   {l:"I step in and lead naturally",pattern:"Grounded leadership",score:{lead:3}},
+   {l:"I feel resentful that my competence isn't being recognised",pattern:"Invisible expertise",score:{resent:2,invisible:1}},
+   {l:"I second-guess myself even when I know I'm right",pattern:"Self-doubt override",score:{doubt:3}}
+  ]}
+ ],
+ money:[
+  {q:"What is your emotional relationship with money?",sub:"Not what you know — what you feel.",opts:[
+   {l:"Anxiety — there's never enough, even when there is",pattern:"Scarcity mindset",score:{scarcity:3}},
+   {l:"Control — money means safety and I manage it tightly",pattern:"Control via money",score:{control:3}},
+   {l:"Avoidance — I don't like thinking about it",pattern:"Money avoidance",score:{avoid:3}},
+   {l:"Neutral — it's a tool, I feel fairly comfortable",pattern:"Healthy relationship",score:{healthy:3}}
+  ]},
+  {q:"How does earning more (or less) than your partner affect your relationship?",sub:"This question applies even if you are the sole earner.",opts:[
+   {l:"I earn more and it creates subtle tension or resentment",pattern:"Earning tension",score:{tension:3}},
+   {l:"I earn less and feel I have less say or power",pattern:"Economic disempowerment",score:{disempower:3}},
+   {l:"It doesn't affect us — we see money as shared",pattern:"Financial equity",score:{equity:3}},
+   {l:"We don't really talk about it openly",pattern:"Money silence",score:{silence:2,avoid:1}}
+  ]},
+  {q:"When you spend money on yourself, what's your internal experience?",sub:"Not what you buy — the feeling before, during, and after.",opts:[
+   {l:"Guilt — I feel I don't deserve it",pattern:"Self-worth deficit",score:{guilt:3,worth:1}},
+   {l:"Anxiety about whether I should have",pattern:"Scarcity anxiety",score:{scarcity:2,anxiety:1}},
+   {l:"I don't spend on myself — I can't justify it",pattern:"Self-denial",score:{deny:3}},
+   {l:"Easy — I feel I've earned it",pattern:"Healthy self-investment",score:{healthy:3}}
+  ]},
+  {q:"If money were not a concern, what would change in your life?",sub:"Notice what comes to mind immediately — this reveals where you feel trapped.",opts:[
+   {l:"I would leave my job or relationship",pattern:"Trapped by economics",score:{trap:3}},
+   {l:"I would invest in my own growth without guilt",pattern:"Growth suppressed by money fear",score:{suppress:2}},
+   {l:"Not much — I'm fairly aligned already",pattern:"Aligned life",score:{aligned:3}},
+   {l:"I would take up space I currently don't allow myself",pattern:"Space denied",score:{deny:2}}
+  ]}
+ ],
+ conflict:[
+  {q:"When a conflict begins, what is your first instinct?",sub:"Before any words are exchanged — your body and mind's first move.",opts:[
+   {l:"Engage immediately — I need to resolve it now",pattern:"Conflict engager",score:{engage:3}},
+   {l:"Go quiet — I need to think before I speak",pattern:"Conflict processor",score:{process:2}},
+   {l:"Leave the room, physically or emotionally",pattern:"Conflict avoider",score:{avoid:3}},
+   {l:"Get defensive — I protect myself first",pattern:"Defensive reflex",score:{defend:3}}
+  ]},
+  {q:"What does 'winning' an argument feel like to you?",sub:"And what are you actually trying to win?",opts:[
+   {l:"Relief — the tension is gone",pattern:"Resolution-oriented",score:{resolve:3}},
+   {l:"Validated — I needed to be heard",pattern:"Validation-seeker",score:{validate:3}},
+   {l:"Hollow — even when I win I feel bad",pattern:"Pyrrhic victory",score:{hollow:3}},
+   {l:"I don't try to win — I give in to end it",pattern:"Conflict appeaser",score:{appease:3}}
+  ]},
+  {q:"After a conflict, what is your pattern?",sub:"What happens in the hours and days that follow.",opts:[
+   {l:"I replay it — I analyse everything I said and they said",pattern:"Ruminative",score:{ruminate:3}},
+   {l:"I move on quickly — I don't hold onto it",pattern:"Fast repair",score:{repair:3}},
+   {l:"I need space before I can reconnect",pattern:"Slow repair",score:{slow:2}},
+   {l:"I pretend it's over but I'm still holding something",score:{l:"I pretend it's over but I'm still holding something",pattern:"False closure",score:{false:3}}}
+  ]},
+  {q:"When you need to say something difficult, what stops you?",sub:"The internal force that keeps the words inside.",opts:[
+   {l:"Fear of their reaction — I manage their feelings",pattern:"Emotion management for others",score:{manage:3}},
+   {l:"Fear of being seen as too much, too sensitive",pattern:"Self-silencing from shame",score:{shame:3,silence:1}},
+   {l:"I don't think it'll make a difference",pattern:"Learned helplessness",score:{helpless:3}},
+   {l:"I don't want to destroy the peace we have",pattern:"Peace protection",score:{peace:2}}
+  ]}
+ ],
+ emotion:[
+  {q:"How do you relate to your own anger?",sub:"Anger at people you love, situations that feel unfair, or things you can't control.",opts:[
+   {l:"I suppress it — I don't think I'm allowed to be angry",pattern:"Anger suppression",score:{suppress:3}},
+   {l:"It leaks out as irritability or sarcasm",pattern:"Displaced anger",score:{displace:3}},
+   {l:"I express it and then it's done",pattern:"Clean anger",score:{clean:3}},
+   {l:"It turns inward — I end up blaming myself",pattern:"Internalised anger",score:{internal:3}}
+  ]},
+  {q:"When you feel overwhelmed, what do you do?",sub:"Not what you should do — what you actually do.",opts:[
+   {l:"Keep going — I can rest later",pattern:"Denial of overwhelm",score:{deny:3}},
+   {l:"Shut down and go numb",pattern:"Dissociation",score:{numb:3}},
+   {l:"Tell someone and ask for support",pattern:"Healthy help-seeking",score:{help:3}},
+   {l:"Control something I can — clean, organise, fix",pattern:"Control under stress",score:{control:3}}
+  ]},
+  {q:"How comfortable are you receiving care and support?",sub:"When someone genuinely tries to help or comfort you.",opts:[
+   {l:"Uncomfortable — I deflect or minimise my needs",pattern:"Care rejection",score:{reject:3}},
+   {l:"I accept it but feel guilty for needing it",pattern:"Guilty receiving",score:{guilt:3}},
+   {l:"It depends on who it is — I have to trust them first",pattern:"Conditional receiving",score:{conditional:2}},
+   {l:"Comfortable — I can ask for and accept support",pattern:"Secure receiving",score:{secure:3}}
+  ]},
+  {q:"What emotion do you find hardest to express out loud?",sub:"Not feel — express. To another person.",opts:[
+   {l:"Sadness — I don't want to seem weak",pattern:"Sadness suppression",score:{suppress:2,weak:1}},
+   {l:"Needs — saying 'I need you' feels terrifying",pattern:"Need suppression",score:{suppress:2,need:2}},
+   {l:"Pride or joy — celebrating myself feels wrong",pattern:"Joy suppression",score:{joy:3}},
+   {l:"Anger — I've been taught it makes me difficult",pattern:"Anger suppression",score:{suppress:3}}
+  ]}
+ ],
+ purpose:[
+  {q:"When you think about your life's direction, what do you feel?",sub:"Not what you've achieved — what you feel about where you're heading.",opts:[
+   {l:"On track — I have a sense of where I'm going",pattern:"Directed",score:{direct:3}},
+   {l:"Stuck — I know what I don't want but not what I do",pattern:"Negative clarity only",score:{stuck:3}},
+   {l:"Behind — I feel I've wasted time",pattern:"Behind schedule anxiety",score:{behind:3}},
+   {l:"Unclear — I've been so busy I haven't thought about it",pattern:"Busyness as avoidance",score:{avoid:3}}
+  ]},
+  {q:"When you imagine a version of your life that feels truly meaningful, what is in the way?",sub:"Not external obstacles — the internal ones.",opts:[
+   {l:"I don't feel I deserve that version yet",pattern:"Worthiness block",score:{worth:3}},
+   {l:"I'm afraid of failing if I try",pattern:"Failure fear",score:{fear:3}},
+   {l:"I'm afraid of what people will think",pattern:"Social fear",score:{social:3}},
+   {l:"I genuinely don't know what that version looks like",pattern:"Vision absence",score:{vision:3}}
+  ]},
+  {q:"How do you respond when your growth outpaces the people around you?",sub:"When you change and the people in your life don't change with you.",opts:[
+   {l:"I shrink myself to stay at their level",pattern:"Growth suppression",score:{shrink:3}},
+   {l:"I feel lonely — I can't share this part of myself",pattern:"Growth isolation",score:{alone:3}},
+   {l:"I move forward and accept the distance it creates",pattern:"Courageous growth",score:{brave:3}},
+   {l:"I oscillate — I grow then retreat, grow then retreat",pattern:"Growth-retreat cycle",score:{cycle:3}}
+  ]},
+  {q:"What is the story you tell yourself about why your life hasn't changed more?",sub:"Your most honest internal narrative.",opts:[
+   {l:"'I'm not ready yet' — I wait for the right moment",pattern:"Readiness waiting",score:{wait:3}},
+   {l:"'It's too late for me' — I've missed my window",pattern:"Foreclosed future",score:{foreclose:3}},
+   {l:"'Other people need me first' — I'll get to myself after",pattern:"Others-first sacrifice",score:{sacrifice:3}},
+   {l:"'I'm working on it' — I'm in motion even if slowly",pattern:"Gradual progress",score:{progress:3}}
+  ]}
+ ]
+};
+
+const PATTERN_PROFILES = {
+ "The Silent Holder":["Self-silencing","Suppressed resentment","Conflict appeaser","Peace protection","Silent absorber","Suppressed resentment"],
+ "The Over-Functioning Anchor":["Over-functioning","Resentful over-functioning","Caretaker","Emotion management for others","Control via overwork"],
+ "The Invisible Achiever":["High-functioning facade","Competence hiding","Impostor pattern","Achievement bypass","Shrinking success"],
+ "The Pattern Repeater":["High inheritance","Unexamined inheritance","Triangulated","Partial awareness","Slow drift recognition"],
+ "The Identity Seeker":["Identity loss","Self-erasure","Identity freeze","Disconnected","Foundational uncertainty"],
+ "The Controlled Exploder":["Conflict engager","Displaced anger","Stress displacement","Ruminative","False closure"],
+ "The Growth Avoider":["Busyness as avoidance","Readiness waiting","Growth-retreat cycle","Others-first sacrifice","Growth suppression"],
+ "The Worth Questioner":["Scarcity mindset","Self-worth deficit","Worthiness block","Guilty receiving","Self-denial"]
+};
+
+const PROFILE_DETAILS = {
+ "The Silent Holder":{
+  desc:"You carry more than anyone knows. You've become skilled at holding the tension, absorbing the weight of relationships, and keeping the peace — at the cost of your own voice. The silence isn't weakness. It's a strategy that once kept you safe. The question now is: who is it protecting?",
+  insight1:{title:"The cost of the silence",body:"Every time you hold back what's true for you, you train the people around you that your needs don't exist. Over time, the resentment accumulates — not as anger at them, but as a quiet erosion of yourself.",dot:"#534AB7"},
+  insight2:{title:"Where it came from",body:"This pattern usually originates in environments where expressing needs was met with dismissal, punishment, or making others upset. You learned that staying small was safer than being seen.",dot:"#D4537E"},
+  shifts:["Notice when you're about to swallow something. Pause. Ask: 'what would I say if I weren't afraid of their reaction?'","Start practising small truths with low stakes. The muscle of speaking your reality gets stronger with use.","Identify one relationship where your silence is the loudest problem — and write what you'd say if you knew it would be received well."]
+ },
+ "The Over-Functioning Anchor":{
+  desc:"You are often the most capable person in the room — and the most exhausted. You've taken on the role of stabiliser, fixer, and emotional manager so seamlessly that people have stopped noticing you do it. The over-functioning isn't accidental. It's how you stay needed, in control, and safe from being let down.",
+  insight1:{title:"The hidden contract",body:"Over-functioning creates an unspoken deal: you do everything so they don't have to. But it also prevents others from rising to meet you. You're managing their potential on their behalf.",dot:"#D85A30"},
+  insight2:{title:"What you're actually protecting",body:"Most over-functioners are protecting against one thing: the terror of depending on someone who might not show up. If you do everything yourself, you can never be abandoned by incompetence.",dot:"#534AB7"},
+  shifts:["This week, let one thing stay undone that you would normally fix. Notice your anxiety. That anxiety is information about the pattern's grip.","Practice 'strategic incompetence' — allow others to figure out something without your intervention.","Ask yourself: what would I have to feel if I stopped doing everything?"]
+ },
+ "The Invisible Achiever":{
+  desc:"You deliver, outperform, and exceed expectations — then immediately minimise it. You've built significant capability but live in chronic fear that it will be exposed as accidental. The high performance and the impostor feeling aren't contradictions. They're the same pattern from different angles.",
+  insight1:{title:"The performance as armour",body:"Achievement became the way you justified your presence. If you produce enough, you don't have to worry about whether you're enough. But the bar keeps moving because the strategy was never going to resolve the underlying question.",dot:"#1D9E75"},
+  insight2:{title:"Shrinking as safety",body:"Downplaying success isn't humility — it's pre-emptive protection. If you don't claim it, no one can take it away or prove you didn't deserve it.",dot:"#BA7517"},
+  shifts:["For one week, receive every compliment without deflecting. Just say 'thank you' and let it land. Notice what happens in your body.","Write a list of 5 things you've done that you haven't fully claimed. Read it out loud.","Ask: who told me that wanting recognition was arrogant?"]
+ },
+ "The Pattern Repeater":{
+  desc:"You are living out a script you didn't write. The dynamics in your current relationships carry the fingerprints of your family of origin — the roles, the silences, the ways conflict was handled or avoided. Seeing the pattern is the beginning. It's not your fault that you inherited it. It is your work to change it.",
+  insight1:{title:"The inheritance is invisible until it isn't",body:"We don't repeat patterns because we're weak. We repeat them because they're familiar. The brain equates familiar with safe — even when familiar is painful.",dot:"#D85A30"},
+  insight2:{title:"The triangulation trap",body:"When a third party (in-law, parent, external influence) holds power in your relationship, it means the primary bond hasn't fully formed its own identity. This isn't about exclusion — it's about differentiation.",dot:"#D4537E"},
+  shifts:["Draw your family's emotional patterns on paper. Who over-functioned? Who went silent? Who was the peacemaker? Now look at your own role today.","Identify one pattern from your family that you are currently replaying — and name what it would look like to do something different.","Notice when you triangulate — when you bring in a third perspective to manage a two-person dynamic."]
+ },
+ "The Identity Seeker":{
+  desc:"Somewhere in the process of becoming what others needed you to be, you lost the thread back to yourself. The grief is real. So is the confusion. You're not broken — you're in the middle of a profound question that most people never even ask: who am I when no one needs anything from me?",
+  insight1:{title:"The erasure was gradual",body:"Identity loss doesn't happen in one moment. It accumulates through thousands of small choices to prioritise others' comfort over your own truth. Each one seemed reasonable. Together they removed you from your own life.",dot:"#D4537E"},
+  insight2:{title:"Not knowing is the beginning",body:"The 'I don't know what I want' feeling is not a failure. It's the first honest thing you've said to yourself in a long time. Stay with it — it will become specific.",dot:"#534AB7"},
+  shifts:["Every day this week, do one thing with no justification. Not because it's productive, healthy, or for someone else. Just because you want to.","Write down 10 things you liked before you became responsible for everyone. One of them is still you.","Practice saying 'I want' out loud. Not 'I think' or 'maybe' or 'it would be nice.' 'I want.'"]
+ },
+ "The Controlled Exploder":{
+  desc:"You manage, contain, and control — until you don't. The explosions feel disproportionate because the load they release is the accumulated weight of everything you held back before. The conflict isn't the problem. It's the pressure gauge for everything underneath.",
+  insight1:{title:"The container has a limit",body:"Controlled suppression creates a pressure system. The longer and tighter you hold, the more volatile the release. The explosion isn't character — it's physics.",dot:"#E24B4A"},
+  insight2:{title:"Rumination as re-injury",body:"Replaying conflicts keeps them alive in the nervous system. Each replay re-triggers the original emotional response. You're not processing — you're re-experiencing.",dot:"#534AB7"},
+  shifts:["Start naming emotions earlier in the cycle — before they build pressure. 'I'm starting to feel unheard' is more powerful than the conversation after an explosion.","After a conflict, give yourself a physical release before you replay it mentally. Movement first, reflection second.","Ask: what was the conversation I needed to have three days before the blowup?"]
+ },
+ "The Growth Avoider":{
+  desc:"You know what you want. You've known for a while. But something keeps you circling the same position — ready but not moving, aware but not acting. The avoidance isn't laziness. It's a protection system running on an old story about what happens when you actually step into your own life.",
+  insight1:{title:"Busyness as permission structure",body:"Staying busy with obligations is a socially acceptable way to avoid the thing you're afraid of. Everyone respects how much you carry. No one sees it as avoidance — including sometimes you.",dot:"#639922"},
+  insight2:{title:"The waiting that never ends",body:"'I'll do it when the kids are older / the job is better / I've saved enough' — the conditions never fully arrive because they're not real conditions. They're fear in disguise.",dot:"#BA7517"},
+  shifts:["Name the actual fear underneath the waiting. Write it down as a sentence: 'I'm afraid that if I try, ___.'","Take one action this week toward what you want — small enough that failure doesn't matter, real enough to count.","Ask: if I were not afraid, what would I have started already?"]
+ },
+ "The Worth Questioner":{
+  desc:"Somewhere deep in your operating system is a question that hasn't been resolved: am I enough? This question shapes how you earn, how you spend, how you receive love, and whether you allow yourself to want things. The scarcity isn't about money or love — it's about your fundamental sense of deserving.",
+  insight1:{title:"Worth isn't earned",body:"The constant achieving, giving, and proving is an attempt to earn worth that was always yours. The exhaustion is the clue — you're working for something that was never withheld, only unfelt.",dot:"#BA7517"},
+  insight2:{title:"The guilt of receiving",body:"Difficulty receiving care, compliments, or success is the worth question made visible. 'I don't deserve this' is the direct translation. The work is not to deserve more — it's to let the existing worth in.",dot:"#D4537E"},
+  shifts:["Every time you say sorry for a need, a feeling, or a desire this week — notice it. Just notice. You don't have to stop yet. Awareness is enough for now.","Write the sentence: 'I am allowed to...' and finish it 10 times. Notice where you resist.","Ask: what was I taught, implicitly or explicitly, about what I deserved?"]
+ }
+};
+
+let selectedAreas=[];
+let allQuestions=[];
+let currentQ=0;
+let answers=[];
+
+function toggleArea(btn){
+ const a=btn.dataset.area;
+ if(btn.classList.contains('sel')){
+  btn.classList.remove('sel');
+  selectedAreas=selectedAreas.filter(x=>x!==a);
+ }else{
+  btn.classList.add('sel');
+  selectedAreas.push(a);
+ }
+ const c=selectedAreas.length;
+ document.getElementById('sel-count').textContent=c===0?'Select at least 2 areas':c===1?'Select 1 more area':c+' areas selected';
+ document.getElementById('btn-start').disabled=c<2;
+}
+
+function startQuiz(){
+ allQuestions=[];
+ selectedAreas.forEach(a=>{
+  const qs=ALL_QS[a]||[];
+  qs.forEach(q=>allQuestions.push({...q,area:a}));
+ });
+ currentQ=0;
+ answers=new Array(allQuestions.length).fill(null);
+ showQ();
+ document.getElementById('s-intro').classList.remove('active');
+ document.getElementById('s-quiz').classList.add('active');
+}
+
+function showQ(){
+ const q=allQuestions[currentQ];
+ const meta=AREA_META[q.area];
+ document.getElementById('q-area-lbl').textContent=meta.label;
+ document.getElementById('q-area-lbl').style.color=meta.color;
+ document.getElementById('q-num-lbl').textContent='Question '+(currentQ+1)+' of '+allQuestions.length;
+ document.getElementById('q-text').textContent=q.q;
+ document.getElementById('q-sub').textContent=q.sub;
+ const ol=document.getElementById('options-list');
+ ol.innerHTML='';
+ const letters=['A','B','C','D'];
+ q.opts.forEach((opt,i)=>{
+  const d=document.createElement('div');
+  d.className='opt'+(answers[currentQ]===i?' selected':'');
+  d.innerHTML='<div class="opt-letter">'+letters[i]+'</div><div><div class="opt-text">'+opt.l+'</div></div>';
+  d.onclick=()=>selectOpt(i);
+  ol.appendChild(d);
+ });
+ const pct=Math.round((currentQ/allQuestions.length)*100);
+ document.getElementById('prog').style.width=pct+'%';
+ document.getElementById('btn-next-q').disabled=answers[currentQ]===null;
+ document.getElementById('btn-next-q').textContent=currentQ===allQuestions.length-1?'See my patterns':'Next';
+}
+
+function selectOpt(i){
+ answers[currentQ]=i;
+ document.querySelectorAll('.opt').forEach((o,idx)=>{
+  o.classList.toggle('selected',idx===i);
+  const l=o.querySelector('.opt-letter');
+  l.textContent=['A','B','C','D'][idx];
+ });
+ document.getElementById('btn-next-q').disabled=false;
+}
+
+function nextQ(){
+ if(currentQ<allQuestions.length-1){currentQ++;showQ();}
+ else{showResults();}
+}
+
+function prevQ(){
+ if(currentQ>0){currentQ--;showQ();}
+ else{
+  document.getElementById('s-quiz').classList.remove('active');
+  document.getElementById('s-intro').classList.add('active');
+ }
+}
+
+function showResults(){
+ document.getElementById('prog').style.width='100%';
+ const patternCounts={};
+ allQuestions.forEach((q,qi)=>{
+  if(answers[qi]!==null){
+   const opt=q.opts[answers[qi]];
+   if(opt&&opt.pattern){
+    patternCounts[opt.pattern]=(patternCounts[opt.pattern]||0)+1;
+   }
+  }
+ });
+ const sorted=Object.entries(patternCounts).sort((a,b)=>b[1]-a[1]);
+ const topPatterns=sorted.slice(0,3).map(x=>x[0]);
+ let profileName="The Identity Seeker";
+ let bestMatch=0;
+ Object.entries(PATTERN_PROFILES).forEach(([name,patterns])=>{
+  const matches=topPatterns.filter(p=>patterns.includes(p)).length;
+  if(matches>bestMatch){bestMatch=matches;profileName=name;}
+ });
+ const profile=PROFILE_DETAILS[profileName]||PROFILE_DETAILS["The Identity Seeker"];
+ const areaSummary={};
+ selectedAreas.forEach(a=>{areaSummary[a]={total:0,count:0};});
+ allQuestions.forEach((q,qi)=>{
+  if(answers[qi]!==null&&areaSummary[q.area]){
+   areaSummary[q.area].total+=1;
+   areaSummary[q.area].count+=1;
+  }
+ });
+ const rs=document.getElementById('s-result');
+ const patternSummary=topPatterns.slice(0,3).join(', ');
+ let html='<div class="pattern-hero">';
+ html+='<div class="ph-label">Your dominant pattern</div>';
+ html+='<div class="ph-name">'+profileName+'</div>';
+ html+='<div class="ph-desc">'+profile.desc+'</div>';
+ html+='</div>';
+ html+='<div class="section-title">Where your patterns show up most</div>';
+ html+='<div style="margin-bottom:1.25rem;">';
+ selectedAreas.forEach(a=>{
+  const meta=AREA_META[a];
+  const qs=allQuestions.filter(q=>q.area===a);
+  const answered=qs.filter((q,i)=>answers[allQuestions.indexOf(q)]!==null).length;
+  const pct=qs.length>0?Math.round((answered/qs.length)*100):0;
+  html+='<div class="score-row"><div class="score-lbl">'+meta.label+'</div><div class="score-track"><div class="score-bar" style="width:'+pct+'%;background:'+meta.color+';"></div></div><div class="score-val">'+pct+'%</div></div>';
+ });
+ html+='</div>';
+ html+='<div class="section-title">Two patterns to understand deeply</div>';
+ html+='<div class="insight-card"><div class="ic-head"><div class="ic-dot" style="background:'+profile.insight1.dot+';"></div><div class="ic-title">'+profile.insight1.title+'</div></div><div class="ic-body">'+profile.insight1.body+'</div></div>';
+ html+='<div class="insight-card"><div class="ic-head"><div class="ic-dot" style="background:'+profile.insight2.dot+';"></div><div class="ic-title">'+profile.insight2.title+'</div></div><div class="ic-body">'+profile.insight2.body+'</div></div>';
+ html+='<div class="section-title">Your top 3 named patterns</div>';
+ html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.25rem;">';
+ topPatterns.forEach((p,i)=>{
+  const cols=[['#EEEDFE','#3C3489'],['#FAECE7','#712B13'],['#E1F5EE','#085041']];
+  const [bg,fg]=cols[i]||cols[0];
+  html+='<span style="background:'+bg+';color:'+fg+';font-size:12px;font-weight:500;padding:4px 10px;border-radius:6px;">'+p+'</span>';
+ });
+ html+='</div>';
+ html+='<div class="section-title">3 shifts to start this week</div>';
+ profile.shifts.forEach((s,i)=>{
+  html+='<div class="shift-card"><div class="shift-num">'+(i+1)+'</div><div class="shift-text">'+s+'</div></div>';
+ });
+ const deepQ='I just completed the life pattern quiz. My dominant pattern is "'+profileName+'" and my top 3 patterns are: '+patternSummary+'. I selected these life areas: '+selectedAreas.join(', ')+'. Can you give me a deep personalised breakdown of what these patterns mean together, how they interact, and a specific 30-day plan to start shifting them?';
+ html+='<div class="cta-block">';
+ html+='<div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:.3rem;">Your pattern is mapped. Now go deeper.</div>';
+ html+='<div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:1rem;">Get a full personalised breakdown + 30-day shift plan based on your exact answers.</div>';
+ html+='<button class="cta-btn" onclick="sendPrompt('+JSON.stringify(deepQ)+')">Get my full pattern breakdown + 30-day plan ↗</button>';
+ html+='<br><button class="cta-ghost" onclick="retake()">Retake with different areas</button>';
+ html+='</div>';
+ rs.innerHTML=html;
+ document.getElementById('s-quiz').classList.remove('active');
+ rs.classList.add('active');
+}
+
+function retake(){
+ selectedAreas=[];
+ document.querySelectorAll('.area-btn').forEach(b=>b.classList.remove('sel'));
+ document.getElementById('sel-count').textContent='Select at least 2 areas';
+ document.getElementById('btn-start').disabled=true;
+ document.getElementById('s-result').classList.remove('active');
+ document.getElementById('s-intro').classList.add('active');
+}
+</script>
